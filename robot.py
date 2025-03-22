@@ -153,7 +153,7 @@ class Robot(Job):
 
         if rsp:
             if msg.from_group():
-                self.sendTextMsg(rsp, msg.roomid, msg.sender)
+                self.sendTextMsg(rsp, msg.roomid, msg.sender)  #群聊回复默认at指令触发人
             else:
                 self.sendTextMsg(rsp, msg.sender)
 
@@ -254,6 +254,8 @@ class Robot(Job):
                 return
             self._msg_timestamps.append(now)
 
+        #at_list中的，如果是群聊at群员，id并非是微信id
+
         # msg 中需要有 @ 名单中一样数量的 @
         ats = ""
         if at_list:
@@ -261,17 +263,26 @@ class Robot(Job):
                 ats = " @所有人"
             else:
                 wxids = at_list.split(",")
-                for wxid in wxids:
-                    # 根据 wxid 查找群昵称
-                    ats += f" @{self.wcf.get_alias_in_chatroom(wxid, receiver)}"
+                if 'wxid' in wxids[0]:
+                    for wxid in wxids:
+                        # 根据 wxid 查找群昵称
+                        #print('wxid:   ', wxid)
+                        ats += f" @{self.wcf.get_alias_in_chatroom(wxid, receiver)}"
+                else:
+                    for wxid in wxids:
+                        # 直接at昵称
+                        #print(self.wcf.get_alias_in_chatroom(wxid, receiver))
+                        ats += f" @{wxid}"
+
 
         # {msg}{ats} 表示要发送的消息内容后面紧跟@，例如 北京天气情况为：xxx @张三
-        if ats == "":
+
+        if ats == "":   #不进行at操作
             self.LOG.info(f"To {receiver}: {msg}")
             self.wcf.send_text(f"{msg}", receiver, at_list)
         else:
             self.LOG.info(f"To {receiver}: {ats}\r{msg}")
-            self.wcf.send_text(f"{ats}\n\n{msg}", receiver, at_list)
+            self.wcf.send_text(f"{ats} {msg}", receiver, at_list)
 
     def getAllContacts(self) -> dict:
         """

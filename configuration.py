@@ -42,3 +42,4 @@ class Config(object):
         self.ZhiPu = yconfig.get("zhipu", {})
 
         self.SEND_RATE_LIMIT = yconfig.get("send_rate_limit", 0)
+        self.WCFPORT = yconfig["wcf"]["port"]

@@ -10,9 +10,13 @@ from constants import ChatType
 from robot import Robot, __version__
 from wcferry import Wcf
 
+from webserver import Webserver
+import threading
+
+
 def main(chat_type: int):
     config = Config()
-    wcf = Wcf(debug=True)
+    wcf = Wcf(debug=True, port=config.WCFPORT)
 
     def handler(sig, frame):
         wcf.cleanup()  # 退出前清理环境
@@ -23,12 +27,16 @@ def main(chat_type: int):
     robot = Robot(config, wcf, chat_type)
     robot.LOG.info(f"WeChatRobot【{__version__}】成功启动···")
 
+    webserver = Webserver(robot=robot)
+    webthread = threading.Thread(target=webserver.run)  #启用多进程启动
+    webthread.start()
     # 机器人启动发送测试消息给文件接收助手
     # robot.sendTextMsg("机器人启动成功！", "filehelper")
 
     # 接收消息
     # robot.enableRecvMsg()     # 可能会丢消息？
     robot.enableReceivingMsg()  # 加队列
+    print("程序能到这吗")
 
     # 每天 7 点发送天气预报
     robot.onEveryTime("07:00", robot.weatherReport)
